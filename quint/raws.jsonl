@@ -1,0 +1,12 @@
+{"type":"purpose","generation":0,"purpose":"Quint実行・検証の依存境界をNode/Bunで実測","contribution":"direct"}
+{"type":"purpose","generation":1,"purpose":"用途ごとの最小ランタイムを選択","contribution":"direct"}
+{"type":"purpose","generation":2,"purpose":"誤って検証済みとすることを防止","contribution":"direct"}
+{"type":"purpose","generation":3,"purpose":"同じ入力・比較条件を再実行できる","contribution":"direct"}
+{"type":"purpose","generation":4,"purpose":"仕様と実装の差を早期発見","contribution":"indirect"}
+{"type":"purpose","generation":5,"purpose":"agentによる検証の自動化","contribution":"indirect"}
+{"type":"purpose","generation":6,"purpose":"品質維持の作業量を削減","contribution":"indirect"}
+{"type":"purpose","generation":7,"purpose":"高利益率で品質を維持","contribution":"indirect"}
+{"type":"purpose","generation":8,"purpose":"事業の継続収益を高める","contribution":"indirect"}
+{"type":"purpose","generation":9,"purpose":"譲渡可能な低属人性の法人資産を形成","contribution":"indirect"}
+{"type":"purpose","generation":10,"purpose":"高価値法人の構築と売却","contribution":"indirect","assumption":true}
+{"type":"design","architecture":"quint/README.md#package-dependency-graph","dataflow":"quint/README.md#evidence-flow","rule":"TLA+版PRの実行コードを複製しない。Quint固有の検査を独立配置し共有の評価形式のみ揃える。"}
