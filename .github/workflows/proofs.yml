@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm install --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
           command -v strace || (sudo apt-get update -qq && sudo apt-get install -y strace)
           mkdir -p .tools evidence/toolchain
           curl -fL --retry 2 https://github.com/tlaplus/tlapm/releases/download/1.6.0-pre/tlapm-1.6.0-pre-x86_64-linux-gnu.tar.gz -o .tools/tlapm.tar.gz
@@ -37,7 +37,6 @@ jobs:
           cp package-lock.json evidence/toolchain/
           .tools/tlapm/bin/tlapm --version | tee evidence/toolchain/version.txt
           .tools/tlapm/bin/tlapm --config > evidence/toolchain/config.txt 2>&1
-          cat package-lock.json
       - name: Run dependency controls
         run: ${{ matrix.runtime }} run.mjs
       - name: Upload raw evidence
@@ -46,5 +45,6 @@ jobs:
         with:
           name: evidence-${{ matrix.runtime }}
           path: evidence/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 30

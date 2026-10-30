@@ -1,4 +1,4 @@
-import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -7,9 +7,9 @@ import { createHash } from 'node:crypto';
 const runtime = typeof Bun === 'undefined' ? 'node' : 'bun';
 const root = resolve(process.env.TLAPS_ROOT ?? '.tools/tlapm');
 const cli = resolve('node_modules/tla-ts/dist/cli.js');
-const out = resolve('evidence', runtime);
+mkdirSync('evidence', { recursive: true });
+const out = mkdtempSync(resolve('evidence', `${runtime}-`));
 const results = [];
-mkdirSync(out, { recursive: true });
 writeFileSync(join(out, 'results.jsonl'), '');
 const env = { ...process.env, PATH: `${root}/bin:/usr/bin:/bin`, TLAPM_SMT_SOLVER: undefined };
 const sha = text => createHash('sha256').update(text).digest('hex');
@@ -26,7 +26,7 @@ const noExternal = [...Object.values(binaries).flat(), ...heap];
 writeFileSync(join(out, 'environment.json'), JSON.stringify({ runtime, version: process.version, bun: globalThis.Bun?.version, platform: process.platform, arch: process.arch, commit: process.env.GITHUB_SHA, root, binaries, heap }, null, 2));
 const moduleText = (name, body) => `---- MODULE ${name} ----\n${body}\n====\n`;
 const proofs = [
-  { id: 'z3', method: 'Z3T(3)', imports: 'Integers, TLAPS', theorem: '\\A n \\in Int : n < n + 1', falseTheorem: '1 > 2', exec: 'z3' },
+  { id: 'z3', method: 'Z3T(3)', imports: 'Integers, TLAPS', theorem: '\\A n \\in Int : n < n + 1', falseTheorem: 'FALSE', exec: 'z3' },
   { id: 'zenon', method: 'ZenonT(3)', imports: 'TLAPS', declarations: 'CONSTANT S, P(_), x', theorem: 'ASSUME x \\in S, \\A y \\in S : P(y) PROVE P(x)', falseTheorem: 'ASSUME x \\in S, \\A y \\in S : P(y) PROVE ~P(x)', exec: 'zenon' },
   { id: 'isabelle', method: 'IsaT(3)', imports: 'TLAPS', theorem: '\\A A, B : (A \\cap B) \\subseteq A', falseTheorem: '\\A A, B : A \\subseteq (A \\cap B)', exec: 'poly' },
   { id: 'ls4', method: 'PTL', imports: 'TLAPS', declarations: 'VARIABLES p, q, r', theorem: '((p ~> q) /\\ (q ~> r)) => (p ~> r)', falseTheorem: '(p ~> q) => (q ~> p)', exec: 'ls4' },
@@ -70,7 +70,7 @@ function check(id, text, args, predicate, config, missing) {
   const { log, trace, ...data } = r;
   const ok = !r.timedOut && predicate(r);
   record(id, data, ok);
-  if (!ok || id === 'isabelle-heap-absent') console.log(`::group::${id} raw output\n${r.log}\n::endgroup::`);
+  if (!ok || id.endsWith('-false') || id.endsWith('-zenon-absent') || id === 'isabelle-heap-absent') console.log(`::group::${id} raw output\n${r.log}\n::endgroup::`);
 }
 const model = moduleText('Proof', 'EXTENDS Naturals\nVARIABLE x\nInit == x = 0\nNext == x < 3 /\\ x\' = x + 1\nSafe == x <= 3\nBad == x < 3');
 const config = invariant => `INIT Init\nNEXT Next\nINVARIANT ${invariant}\nCHECK_DEADLOCK FALSE\n`;
