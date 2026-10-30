@@ -3,7 +3,7 @@
 - [Stacked PR #2](https://github.com/roccho-dev/proofs/pull/2), parent [TLA+ PR #1](https://github.com/roccho-dev/proofs/pull/1).
 - Experimental commit: `66655b326c16add3eb7bfa241f4971c7c3cd0a6a`.
 - [Node / Bun successful run 41110155773](https://github.com/roccho-dev/proofs/actions/runs/41110155773): **13/13 + 13/13 = 26/26**.
-- Node job `124249958058` (check API before trusting this field); Bun job also on same run. Use run URL as authoritative identifier.
+- Node job [124250182808](https://github.com/roccho-dev/proofs/actions/runs/41110155773/job/124250182808); Bun job [124250182339](https://github.com/roccho-dev/proofs/actions/runs/41110155773/job/124250182339). Both concluded success.
 - Node raw ZIP: [artifact 13003317340](https://github.com/roccho-dev/proofs/actions/runs/41110155773/artifacts/13003317340), SHA256 `8be9ff3bd26667fcb688604d1e36aea93d9594ab410d3fb91894f4cfb8d765b6`, 1,846,155 bytes.
 - Bun raw ZIP: [artifact 13002938040](https://github.com/roccho-dev/proofs/actions/runs/41110155773/artifacts/13002938040), SHA256 `1e03be1515c68e6b49d74ece8dfde9ac4084196d274d7ef002b37d1a44464afc`, 1,846,060 bytes.
 
