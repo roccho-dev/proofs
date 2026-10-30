@@ -1,4 +1,4 @@
-import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { basename, join, resolve } from 'node:path';
@@ -57,6 +57,12 @@ function withoutExecutable(id, path, args, accept) {
   try { return check(id, args, accept); }
   finally { chmodSync(path, original); }
 }
+function withoutFile(id, path, args, accept) {
+  if (!existsSync(path)) return check(id, args, () => false);
+  renameSync(path, path + '.absent');
+  try { return check(id, args, accept); }
+  finally { renameSync(path + '.absent', path); }
+}
 const noExternal = r => !r.execs.some(x => ['java', 'quint_evaluator', 'apalache-mc', 'z3'].includes(x));
 const test = ['test', '--backend=typescript', '--max-samples=1', '--seed=1'];
 const rust = ['test', '--backend=rust', '--max-samples=1', '--seed=1'];
@@ -82,6 +88,8 @@ if (goodA.exit === 0) {
 check('apalache-violation', verify('apalache', 'bad', 8842), r => r.exit !== 0 && /\[violation\]|counterexample/i.test(r.log) && r.execs.includes('java'));
 
 check('tlc-pass', verify('tlc', 'safe', 8843), r => r.exit === 0 && /\[ok\]/.test(r.log) && r.execs.includes('java') && /tlc2\.TLC/.test(r.trace));
+const jar = join(home, 'apalache-dist-0.62.4/apalache/lib/apalache.jar');
+withoutFile('tlc-jar-disabled', jar, verify('tlc', 'safe', 8846), r => r.exit !== 0 && !/\[ok\]/.test(r.log) && /error|not found|no such file|ClassNotFound|jar/i.test(r.log));
 check('tlc-violation', verify('tlc', 'bad', 8844), r => r.exit !== 0 && /\[violation\]|counterexample/i.test(r.log) && /tlc2\.TLC/.test(r.trace));
 
 // Java is hidden by PATH on an isolated child. No global Java files are changed.
