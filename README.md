@@ -1,82 +1,94 @@
 # proofs
 
-TLA+をNode.js / Bunから実行する最小の依存検証。
+**TLA+をNode.js / Bunから実行し、必要な外部依存だけを実測する。**
 
-**範囲:** 有限モデルの検査と定理証明を分ける。「必須」は固定した実行経路での必要性であり、その数学的問題を他の証明器で解けないという意味ではない。
+実行器は `run.mjs` 1本、証明シナリオは4件のデータ。GitHub Actionsで **25条件 × 2環境 = 50/50** を確認した。[実測結果・固定版・限界](RESULTS.md)。
 
-## 先に固定するシナリオ
+「必須」はこの版・実行方式で必要という意味。その数学的問題を他の証明器で解けないという意味ではない。シナリオMMDは実装前のcommit `a3d37e454ca4a5f6ab67c246f125ebaf6ae4e285` で先に保存した。以下は実測後の構成。
 
-| 対象 | ユースケース | 成功条件 | 依存を外した対照 |
+## 用途と最小依存
+
+全行にNode.jsまたはBunと `tla-ts@0.0.3` が必要。表は調べた証明ツールの範囲であり、OSの標準コマンド・ライブラリは省略する。
+
+| 用途 | 最小シナリオ | 追加する依存 | 除去時 |
 |---|---|---|---|
-| 外部証明器なし | 有限カウンタが上限を守るか | 正常仕様は成功、誤った上限には反例 | TLAPMもJavaも要求しない |
-| TLAPM | 証明付き仕様を最後まで検証する | 証明義務が1件以上あり、すべて証明済み | `tla-ts prove`がTLAPM不在を報告 |
-| Z3 | 整数の大小関係を証明する | Z3を指定した算術証明が成功 | 同じ経路でZ3を外すと未証明 |
-| Zenon | 全称条件から個別の条件を導く | Zenonを指定した一階論理の証明が成功 | 同じ経路でZenonを外すと未証明 |
-| Isabelle | 集合の包含関係を証明する | Isabelleを指定した集合の証明が成功 | 同じ経路でIsabelleを外すと未証明 |
-| LS4 | 「いつか」の連鎖を証明する | PTLを指定した時相論理の証明が成功 | 同じ経路でLS4を外すと未証明 |
+| 有限モデルの検査 | カウンタ0〜3、上限違反には反例 | なし | 全証明ツールを外しても成功 |
+| 証明義務の生成だけ | 論理式を証明すべき主張へ分ける | なし | 全証明ツールを外しても生成成功 |
+| 証明の実行 | 以下の4方式を実行する入口 | TLAPMと標準モジュール | TLAPMなしでは終了コード1 |
+| 一階論理の証明 | 全員が条件を満たすなら、その一人も満たす | TLAPM + Zenon | Zenonなしでは終了コード3 |
+| 整数の大小関係 | 全整数nについて n < n+1 | TLAPM + Zenon + Z3 | Z3なしでは終了コード10 |
+| 集合の包含 | AとBの共通部分はAに含まれる | TLAPM + Zenon + IsabelleのPoly/ML・理論 | Poly/MLまたは理論なしでは終了コード10 |
+| 時間に沿った性質 | pからいつかq、qからいつかrなら、pからいつかr | TLAPM + Zenon + ptl_to_trp + LS4 | 変換器またはLS4なしでは終了コード10 |
+
+**観測した追加依存:** このTLAPM版は証明器を選ぶ前に `zenon -v` を実行する。Z3・Isabelle・LS4だけを選んでも、Zenon不在で起動に失敗する。Zenonがそれらの証明を代行しているわけではない。
 
 ```mermaid
 flowchart TB
-  subgraph Cases["用途"]
-    M["有限カウンタの上限検査"]
-    P["証明付き仕様の検証"]
-    Z["整数の大小関係"]
-    N["全称条件から個別条件"]
-    I["集合の包含"]
-    L["いつかの連鎖"]
+  subgraph JS["Node.js / Bun"]
+    T["tla-ts"]
+    M["有限モデル検査"]
+    O["証明義務の生成"]
   end
-  subgraph Runtime["実行"]
-    TS["Node.js / Bun + tla-ts"]
-    PM["TLAPM"]
-    subgraph Backends["選んだ方式だけを使う"]
-      Z3["Z3"]
-      ZE["Zenon"]
-      IS["Isabelle"]
+  subgraph External["証明するときだけ"]
+    PM["TLAPM + 標準モジュール"]
+    ZN["Zenon"]
+    Z3["Z3"]
+    subgraph Isa["Isabelle実行環境"]
+      ML["Poly/ML"]
+      H["構築済み理論"]
+    end
+    subgraph Temporal["時相論理"]
+      TR["ptl_to_trp"]
       LS["LS4"]
     end
   end
-  M --> TS
-  P --> TS
-  TS -->|"証明実行のみ"| PM
-  Z --> Z3
-  N --> ZE
-  I --> IS
-  L --> LS
-  PM --> Z3
-  PM --> ZE
-  PM --> IS
-  PM --> LS
+  T --> M
+  T --> O
+  T -->|"証明実行"| PM
+  PM -->|"起動時の版確認・一階論理"| ZN
+  PM -->|"整数"| Z3
+  PM -->|"集合"| ML
+  ML --> H
+  PM -->|"いつかの連鎖"| TR
+  TR --> LS
 ```
 
-## 実証の契約
-
-各証明器について、同じ仕様の「利用可能」「その依存を除去」「誤った主張」の3条件を実行する。キャッシュを使わず、終了コードだけでなく証明義務の件数と結果を確認する。タイムアウト、未実行、証明義務0件を成功に含めない。生ログとJSONLを保存する。
+## 検証の流れ
 
 ```mermaid
 flowchart LR
-  subgraph Input["入力"]
-    S["固定した仕様・実行方式・バージョン"]
+  subgraph Input["固定入力"]
+    S["仕様・方式・版"]
   end
-  subgraph Experiment["対照実験"]
+  subgraph Controls["対照実験"]
     A["依存あり"]
-    B["依存なし"]
+    B["選択依存を除去"]
     C["誤った主張"]
+    D["不要な証明器を除去"]
   end
-  subgraph Evidence["出力"]
-    E["生ログ + 件数 + 判定"]
+  subgraph Output["証拠"]
+    E["生ログ・実行履歴・件数・終了コード・hash"]
   end
   S --> A
   S --> B
   S --> C
+  S --> D
   A --> E
   B --> E
   C --> E
+  D --> E
 ```
 
-## 出典
+偽物の証明器は使わない。毎回新しいディレクトリでキャッシュを消し、実物の依存を一時除去して復帰する。0件の証明義務、終了コード0だけ、時間切れを成功に含めない。詳細は `raws.jsonl` と `disruptives.jsonl`。
 
-- [tla-ts README](https://github.com/aidenybai/tla-ts): モデル検査はJS内、証明実行は外部TLAPMへ委譲。
-- [TLAPS tactics](https://proofs.tlapl.us/doc/web/content/Documentation/Tutorial/Tactics.html): バックエンドの明示指定と代替。
-- [TLAPS advanced options](https://proofs.tlapl.us/doc/web/content/Documentation/Tutorial/Advanced_options.html): 証明器、キャッシュ、strict判定。
+## 再実行
 
-この文書は実行前の計画。実測結果は検証ログを参照し、未実行を達成扱いにしない。
+Actionsの `proofs` ワークフローが導入から保存まで行う。ローカルではLinux x86_64で、同ワークフローの固定版TLAPSを `.tools/tlapm` へ展開し、`strace` と `timeout` を用意する。`npm ci` の後に `node run.mjs` または `bun run.mjs` を実行する。`TLAPS_ROOT` で展開先を変更できる。
+
+**検証専用のTLAPSコピーを使うこと。** 除去テスト中に同じインストールを別の仕事から使わない。証拠は `evidence/` に保存する。Actionsのartifact保持期間は30日。
+
+## 一次資料
+
+- [tla-ts](https://github.com/aidenybai/tla-ts): モデル検査と証明実行の境界。
+- [TLAPS tactics](https://proofs.tlapl.us/doc/web/content/Documentation/Tutorial/Tactics.html): 証明器の選択。
+- [TLAPS advanced options](https://proofs.tlapl.us/doc/web/content/Documentation/Tutorial/Advanced_options.html): strict・キャッシュ。
