@@ -9,6 +9,8 @@
 {"type":"purpose","generation":8,"purpose":"利益率と継続提供能力を高める","contribution":"indirect"}
 {"type":"purpose","generation":9,"purpose":"属人性の低い法人資産を作る","contribution":"indirect"}
 {"type":"purpose","generation":10,"purpose":"高価値法人の構築と売却に寄与する","contribution":"indirect","assumption":true}
-{"type":"design","architecture":"README.md#先に固定するシナリオ","dataflow":"README.md#実証の契約","rule":"1つの実行器、4つの証明ケース、同一入力で依存だけを除去する対照。モデル検査と証明義務生成は外部証明器なし。"}
-{"type":"refinement","rule":"常時5依存を載せず、モデル検査はJSだけ、証明時だけTLAPMと選択した証明器を使う。数学的な唯一性は主張しない。"}
-{"type":"status","status":"planned","evidence":"GitHub Actionsの同一コミットの生ログでのみ実行済み判定する"}
+{"type":"design","architecture":"README.md#用途と最小依存","dataflow":"README.md#検証の流れ","rule":"1つの実行器、4つの証明ケース、同一入力で依存だけを除去する対照。モデル検査と証明義務生成は外部証明器なし。"}
+{"type":"measurement","date":"2026-10-30","repository":"roccho-dev/proofs","sourceCommit":"2e2250f691f2341ef373d6cbae416aad16cc23f0","run":41061416265,"node":{"job":124081823730,"passed":25,"total":25,"artifact":12979216828,"sha256":"892280e57d11b0ace3aef10cfa459e19f24580b24df84cb73150f5fe58a0b087"},"bun":{"job":124081824058,"passed":25,"total":25,"artifact":12979202053,"sha256":"9f406d7ee9241fb35d5f0cb4176d05bb609abfb21d56007b7f7fa74b34740bb1"},"crosscheck":"25対の入力・除去依存・終了コード・判定が一致。50件の入力hash・ログhashを実ファイルから照合。"}
+{"type":"finding","subject":"Zenon","fact":"TLAPM 941f894は起動時にzenon -vを要求。Z3・Isabelle・LS4経路でもZenonを除去すると終了コード3。","evidence":"各*-zenon-absentのstderrと各*-presentのexec.log"}
+{"type":"limitation","subject":"Z3 arithmetic negative control","fact":"Run 41060668864で1 > 2は3秒でtimeout。最終のFALSE対照はreason:falseで非受理。偽の算術命題を即時判別できるとは主張しない。"}
+{"type":"refinement","rule":"普段の有限モデル検査はJSだけ。証明時はTLAPM+Zenonを共通基盤にし、用途に応じてZ3・Isabelle・LS4を追加する。Poly/ML・理論・変換器を含め、実測で選んだ依存だけを保持する。","scope":"固定版・今回の25条件。数学的な唯一性は主張しない。"}
