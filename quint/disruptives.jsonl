@@ -1,0 +1,16 @@
+{"id":1,"risk":"成功したコマンドが実際には0テスト","control":"1 passing または[ok]と入力を同時確認"}
+{"id":2,"risk":"ランダム探索を網羅検査と誤認","control":"runとverifyの責務を分ける"}
+{"id":3,"risk":"Rust実行器をTypeScript内製と誤認","control":"--backend=typescriptを明示、Rust時はexecve確認"}
+{"id":4,"risk":"Rustコンパイラを実行時必須と誤認","control":"必要なのは事前ビルド済み評価器と明示"}
+{"id":5,"risk":"Rustバイナリ欠落で自動再取得され成功","control":"実体を残したまま実行権限を除去"}
+{"id":6,"risk":"JVMを必要としない経路でも起動する","control":"JS経路でexecveの不在を確認"}
+{"id":7,"risk":"JVMが必要なのに遠隔サーバで動く","control":"端点をジョブ内localhost専用にしてjava execveを見る"}
+{"id":8,"risk":"Apalacheの起動失敗を証明失敗と混同","control":"結果の失敗を非受理し環境エラーを区別"}
+{"id":9,"risk":"TLC経路がApalacheに依存しないと誤認","control":"compile処理とApalache JAR経由である事実を併記"}
+{"id":10,"risk":"Apalacheの有界検査を無限保証と誤認","control":"max-steps=4を明記"}
+{"id":11,"risk":"Z3を直接実行したと誤認","control":"ネイティブsolverの独立除去未実施は未実証とする"}
+{"id":12,"risk":"タイムアウトを期待する失敗に数える","control":"timeout/signalを必ず不合格"}
+{"id":13,"risk":"Nodeの成功をBunに転用","control":"runtime matrixで個別検証"}
+{"id":14,"risk":"インストール済み共有資源を破壊","control":"QUINT_HOME分離・finally復帰"}
+{"id":15,"risk":"依存の更新で再現できなくなる","control":"Quint・Apalache・Rust evaluator版固定、npm tree記録。ただしtransitive lock未固定と明示"}
+{"id":16,"risk":"派生PRのmergeで親PRを巻き込む","control":"base=proof/tla-dependencies、draft、CI確認後に親merge順序を考慮"}
