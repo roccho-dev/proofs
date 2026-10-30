@@ -13,8 +13,8 @@ const home = mkdtempSync(join(toolDir, 'quint-' + runtime + '-'));
 const env = { ...process.env, QUINT_HOME: home, CI: 'true' };
 const results = [];
 const hash = s => createHash('sha256').update(s).digest('hex');
-const sourceHash = hash(readFileSync(join(cwd, 'Counter.qnt')));
-writeFileSync(join(output, 'versions.json'), JSON.stringify({ runtime, node: process.version, bun: globalThis.Bun?.version, quint: '0.33.1', apalache: '0.62.4', evaluator: 'v0.7.1', sourceHash }, null, 2));
+const sourceSha256 = hash(readFileSync(join(cwd, 'Counter.qnt')));
+writeFileSync(join(output, 'versions.json'), JSON.stringify({ runtime, node: process.version, bun: globalThis.Bun?.version, quint: '0.33.1', apalache: '0.62.4', evaluator: 'v0.7.1', sourceSha256 }, null, 2));
 
 function run(id, args, overrides = {}) {
   const dir = join(output, id);
@@ -29,7 +29,7 @@ function run(id, args, overrides = {}) {
   const trace = existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '';
   const execs = [...new Set([...trace.matchAll(/execve\("([^"]+)".*\) = 0/g)].map(m => basename(m[1])))];
   const timedOut = !!child.error || !!child.signal || [124, 137].includes(child.status) || /timed out|timeout exceeded/i.test(log);
-  return { exit: child.status, execs, timedOut, log, trace, args, sourceHash, logSha256: hash(log), traceSha256: hash(trace), error: child.error?.message };
+  return { exit: child.status, execs, timedOut, log, trace, args, sourceSha256, logSha256: hash(log), traceSha256: hash(trace), error: child.error?.message };
 }
 function check(id, args, accept, options = {}) {
   try {
