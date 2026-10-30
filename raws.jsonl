@@ -1,0 +1,14 @@
+{"type":"purpose","generation":0,"purpose":"Node.js/BunでTLA+を実行し、外部依存の必要条件を実測する","contribution":"direct"}
+{"type":"purpose","generation":1,"purpose":"用途ごとの最小依存を選べるようにする","contribution":"direct"}
+{"type":"purpose","generation":2,"purpose":"検証環境の再現性を確保する","contribution":"direct"}
+{"type":"purpose","generation":3,"purpose":"誤った成功判定を減らす","contribution":"direct"}
+{"type":"purpose","generation":4,"purpose":"変更の安全性を高める","contribution":"indirect"}
+{"type":"purpose","generation":5,"purpose":"開発と運用の手戻りを減らす","contribution":"indirect"}
+{"type":"purpose","generation":6,"purpose":"少ない実装で検証を再利用する","contribution":"indirect"}
+{"type":"purpose","generation":7,"purpose":"低コストで品質を維持する","contribution":"indirect"}
+{"type":"purpose","generation":8,"purpose":"利益率と継続提供能力を高める","contribution":"indirect"}
+{"type":"purpose","generation":9,"purpose":"属人性の低い法人資産を作る","contribution":"indirect"}
+{"type":"purpose","generation":10,"purpose":"高価値法人の構築と売却に寄与する","contribution":"indirect","assumption":true}
+{"type":"design","architecture":"README.md#先に固定するシナリオ","dataflow":"README.md#実証の契約","rule":"1つの実行器、4つの証明ケース、同一入力で依存だけを除去する対照。モデル検査と証明義務生成は外部証明器なし。"}
+{"type":"refinement","rule":"常時5依存を載せず、モデル検査はJSだけ、証明時だけTLAPMと選択した証明器を使う。数学的な唯一性は主張しない。"}
+{"type":"status","status":"planned","evidence":"GitHub Actionsの同一コミットの生ログでのみ実行済み判定する"}
